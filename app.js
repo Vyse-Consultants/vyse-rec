@@ -4,6 +4,7 @@ const navMenu = document.getElementById('nav-menu');
 const navLinks = document.querySelectorAll('.nav__link');
 const contactForm = document.getElementById('contact-form');
 const header = document.querySelector('.header');
+const logoLink = document.querySelector('.nav__logo-link');
 
 // Mobile Navigation Toggle
 function toggleMobileNav() {
@@ -55,6 +56,21 @@ function smoothScrollToSection(e) {
     }
 }
 
+// Logo click handler - scroll to top
+function handleLogoClick(e) {
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+    
+    // Close mobile nav if open
+    closeMobileNav();
+    
+    // Update active nav link to home
+    updateActiveNavLink('#home');
+}
+
 // Update active navigation link
 function updateActiveNavLink(targetId) {
     navLinks.forEach(link => {
@@ -65,19 +81,30 @@ function updateActiveNavLink(targetId) {
     });
 }
 
-// Header scroll effect
+// Enhanced header scroll effect with better visibility
 function handleHeaderScroll() {
     if (!header) return;
     
-    if (window.scrollY > 50) {
+    const scrolled = window.scrollY > 10;
+    
+    if (scrolled) {
+        header.style.backgroundColor = 'rgba(252, 252, 249, 0.98)';
+        header.style.backdropFilter = 'blur(15px)';
+        header.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.1)';
+        header.style.borderBottom = '1px solid rgba(94, 82, 64, 0.15)';
+    } else {
         header.style.backgroundColor = 'rgba(252, 252, 249, 0.95)';
         header.style.backdropFilter = 'blur(10px)';
-        header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-    } else {
-        header.style.backgroundColor = 'var(--color-surface)';
-        header.style.backdropFilter = 'none';
-        header.style.boxShadow = 'none';
+        header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.08)';
+        header.style.borderBottom = '1px solid var(--color-border)';
     }
+
+    // Ensure navigation links are always visible
+    navLinks.forEach(link => {
+        if (!link.style.color || link.style.color === '') {
+            link.style.color = 'var(--color-text)';
+        }
+    });
 }
 
 // Form validation
@@ -192,14 +219,14 @@ function handleContactForm(e) {
     }, 2000);
 }
 
-// Intersection Observer for navigation highlighting
+// Enhanced Intersection Observer for navigation highlighting
 function createIntersectionObserver() {
     const sections = document.querySelectorAll('section[id]');
     if (sections.length === 0) return;
     
     const observerOptions = {
         root: null,
-        rootMargin: '-20% 0px -60% 0px',
+        rootMargin: '-15% 0px -70% 0px',
         threshold: 0.1
     };
 
@@ -208,6 +235,9 @@ function createIntersectionObserver() {
             if (entry.isIntersecting) {
                 const targetId = '#' + entry.target.id;
                 updateActiveNavLink(targetId);
+                
+                // Add visible class for animations
+                entry.target.classList.add('section-visible');
             }
         });
     }, observerOptions);
@@ -217,42 +247,58 @@ function createIntersectionObserver() {
     });
 }
 
-// Animate elements on scroll
+// Animate elements on scroll with enhanced visibility
 function animateOnScroll() {
-    const elements = document.querySelectorAll('.service__card, .industry__card, .advantage__card');
+    const elements = document.querySelectorAll('.service__card, .industry__card, .advantage__card, .feature, .client__logo');
     
     if (elements.length === 0) return;
     
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                // Stagger animations for better visual effect
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('animated');
+                }, index * 100);
             }
         });
     }, {
         threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        rootMargin: '0px 0px -30px 0px'
     });
     
     elements.forEach(element => {
         element.style.opacity = '0';
         element.style.transform = 'translateY(30px)';
-        element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        element.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
         observer.observe(element);
     });
 }
 
-// Initialize keyboard navigation
+// Initialize keyboard navigation with accessibility improvements
 function initKeyboardNavigation() {
     // Handle escape key to close mobile menu
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && navMenu && navMenu.classList.contains('active')) {
             closeMobileNav();
         }
+        
+        // Handle tab navigation enhancement
+        if (e.key === 'Tab') {
+            // Ensure focus is visible on navigation elements
+            setTimeout(() => {
+                const focusedElement = document.activeElement;
+                if (focusedElement && focusedElement.classList.contains('nav__link')) {
+                    focusedElement.style.outline = '2px solid var(--brand-secondary)';
+                    focusedElement.style.outlineOffset = '2px';
+                }
+            }, 10);
+        }
     });
     
-    // Handle enter key on nav toggle
+    // Handle enter and space key on nav toggle
     if (navToggle) {
         navToggle.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -261,9 +307,19 @@ function initKeyboardNavigation() {
             }
         });
     }
+    
+    // Enhance logo keyboard accessibility
+    if (logoLink) {
+        logoLink.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleLogoClick(e);
+            }
+        });
+    }
 }
 
-// Add loading states and user feedback
+// Enhanced user experience with better interactions
 function enhanceUserExperience() {
     // Add click handlers for all anchor links with href starting with #
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
@@ -271,25 +327,98 @@ function enhanceUserExperience() {
         link.addEventListener('click', smoothScrollToSection);
     });
     
-    // Add hover effects for better interaction feedback
-    const cards = document.querySelectorAll('.service__card, .industry__card, .client__logo');
+    // Enhanced hover effects with better performance
+    const interactiveCards = document.querySelectorAll('.service__card, .industry__card, .client__logo, .advantage__card, .feature');
     
-    cards.forEach(card => {
+    interactiveCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.transform = this.style.transform.includes('translateY') ? 
-                this.style.transform.replace(/translateY\([^)]*\)/, 'translateY(-4px)') : 
-                'translateY(-4px)';
+            this.style.transform = 'translateY(-4px)';
+            this.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
         });
         
         card.addEventListener('mouseleave', function() {
-            this.style.transform = this.style.transform.replace(/translateY\([^)]*\)/, 'translateY(0)');
+            this.style.transform = 'translateY(0)';
+        });
+        
+        // Add focus support for keyboard users
+        card.addEventListener('focus', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.outline = '2px solid var(--brand-secondary)';
+            this.style.outlineOffset = '2px';
+        });
+        
+        card.addEventListener('blur', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.outline = 'none';
+        });
+    });
+    
+    // Add enhanced navigation link visibility
+    navLinks.forEach(link => {
+        link.addEventListener('mouseenter', function() {
+            this.style.color = 'var(--brand-primary)';
+            this.style.backgroundColor = 'rgba(var(--color-teal-500-rgb), 0.08)';
+        });
+        
+        link.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('active')) {
+                this.style.color = 'var(--color-text)';
+                this.style.backgroundColor = 'transparent';
+            }
         });
     });
 }
 
-// Initialize page functionality
+// Enhanced visibility checker to ensure navigation is always visible
+function ensureNavigationVisibility() {
+    navLinks.forEach(link => {
+        const computedStyle = window.getComputedStyle(link);
+        const color = computedStyle.color;
+        const backgroundColor = computedStyle.backgroundColor;
+        
+        // If the link is not visible enough, force better contrast
+        if (color === 'rgba(0, 0, 0, 0)' || color === 'transparent') {
+            link.style.color = 'var(--color-text)';
+        }
+        
+        // Ensure minimum opacity
+        if (parseFloat(computedStyle.opacity) < 0.8) {
+            link.style.opacity = '1';
+        }
+    });
+}
+
+// Performance monitoring and optimization
+function initPerformanceOptimizations() {
+    // Debounce scroll events for better performance
+    let scrollTimeout;
+    const debouncedScrollHandler = () => {
+        if (scrollTimeout) {
+            cancelAnimationFrame(scrollTimeout);
+        }
+        scrollTimeout = requestAnimationFrame(() => {
+            handleHeaderScroll();
+            ensureNavigationVisibility();
+        });
+    };
+    
+    window.addEventListener('scroll', debouncedScrollHandler, { passive: true });
+    
+    // Optimize intersection observer performance
+    if ('IntersectionObserver' in window) {
+        createIntersectionObserver();
+        animateOnScroll();
+    }
+}
+
+// Initialize page functionality with enhanced error handling
 function initializePage() {
     try {
+        // Logo functionality
+        if (logoLink) {
+            logoLink.addEventListener('click', handleLogoClick);
+        }
+        
         // Navigation functionality
         if (navToggle) {
             navToggle.addEventListener('click', toggleMobileNav);
@@ -305,20 +434,17 @@ function initializePage() {
             contactForm.addEventListener('submit', handleContactForm);
         }
         
-        // Scroll effects
-        window.addEventListener('scroll', handleHeaderScroll);
-        
-        // Initialize intersection observer for navigation
-        createIntersectionObserver();
-        
-        // Initialize animations
-        animateOnScroll();
+        // Initialize performance optimizations
+        initPerformanceOptimizations();
         
         // Initialize keyboard navigation
         initKeyboardNavigation();
         
         // Enhance user experience
         enhanceUserExperience();
+        
+        // Ensure navigation visibility on load
+        ensureNavigationVisibility();
         
         // Handle clicks outside mobile menu
         document.addEventListener('click', (e) => {
@@ -329,10 +455,25 @@ function initializePage() {
             }
         });
         
-        console.log('VYSE Recruit website initialized successfully');
+        // Initial header state
+        handleHeaderScroll();
+        
+        // Ensure proper contrast on page load
+        setTimeout(() => {
+            ensureNavigationVisibility();
+        }, 100);
+        
+        console.log('VYSE Recruit website initialized successfully with enhanced navigation visibility');
         
     } catch (error) {
         console.error('Error initializing page:', error);
+        
+        // Fallback to ensure basic functionality works
+        if (navToggle && navMenu) {
+            navToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
     }
 }
 
@@ -345,16 +486,29 @@ if (document.readyState === 'loading') {
 
 // Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        console.log('Page hidden - pausing any background processes');
-    } else {
-        console.log('Page visible - resuming functionality');
+    if (!document.hidden) {
+        // Re-ensure navigation visibility when page becomes visible
+        setTimeout(() => {
+            ensureNavigationVisibility();
+            handleHeaderScroll();
+        }, 100);
     }
+});
+
+// Handle window resize to maintain navigation visibility
+window.addEventListener('resize', () => {
+    setTimeout(() => {
+        ensureNavigationVisibility();
+        handleHeaderScroll();
+    }, 100);
 });
 
 // Error handling for any uncaught errors
 window.addEventListener('error', (e) => {
     console.error('JavaScript error:', e.error);
+    
+    // Ensure basic navigation still works despite errors
+    ensureNavigationVisibility();
 });
 
 // Performance monitoring
@@ -362,5 +516,27 @@ if ('performance' in window) {
     window.addEventListener('load', () => {
         const loadTime = performance.now();
         console.log(`VYSE Recruit page loaded in ${Math.round(loadTime)}ms`);
+        
+        // Final check for navigation visibility after everything is loaded
+        setTimeout(() => {
+            ensureNavigationVisibility();
+        }, 500);
     });
+}
+
+// Dark mode support for navigation visibility
+function handleThemeChange() {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    prefersDark.addEventListener('change', (e) => {
+        setTimeout(() => {
+            ensureNavigationVisibility();
+            handleHeaderScroll();
+        }, 100);
+    });
+}
+
+// Initialize theme change handling
+if (window.matchMedia) {
+    handleThemeChange();
 }
